@@ -137,13 +137,14 @@ function setupRecognition() {
 
 async function loadLiveNews({ announce = false } = {}) {
     try {
-        const response = await fetch("/api/news", { cache: "no-store" });
+        const response = await fetch(`/api/news?ts=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`API ${response.status}`);
         const payload = await response.json();
-        if (Array.isArray(payload.items) && payload.items.length) newsData = payload.items;
-        liveFeed = Boolean(payload.live);
+        if (!Array.isArray(payload.items)) throw new Error("API_INVALID_PAYLOAD");
+        if (payload.items.length) newsData = payload.items;
+        liveFeed = Boolean(payload.live && !payload.fallback);
         $("#connectionLabel").textContent = liveFeed ? "LIVE MARKET LINK ONLINE" : "DEMO FALLBACK ACTIVE";
-        $("#lastUpdated").textContent = liveFeed ? "LIVE · JUST NOW" : "FALLBACK · JUST NOW";
+        $("#lastUpdated").textContent = liveFeed ? "LIVE · JUST NOW" : `FALLBACK · ${payload.errorCode || "PROVIDER ISSUE"}`;
         renderNews();
         const newHighImpact = newsData.filter((item) => item.impact === "HIGH" && !knownHighImpactIds.has(item.id));
         newHighImpact.forEach((item) => knownHighImpactIds.add(item.id));
@@ -151,10 +152,12 @@ async function loadLiveNews({ announce = false } = {}) {
             const alert = `Nayi high impact khabar: ${newHighImpact[0].title}`;
             showToast(alert); if (alwaysReady) speak(alert);
         } else if (announce) showToast(payload.message || "Market intelligence feed updated.");
+        if (!liveFeed && payload.errorCode) console.warn("ROOBOT feed fallback:", payload.errorCode, payload.message);
     } catch (error) {
         liveFeed = false;
         $("#connectionLabel").textContent = "API OFFLINE · DEMO ACTIVE";
         $("#lastUpdated").textContent = "OFFLINE FALLBACK";
+        console.error("ROOBOT news feed error:", error);
         if (announce) showToast("Live API unavailable — demo feed active hai.");
     }
 }
