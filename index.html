@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071013" />
+    <title>R.O.O.B.O.T. | Financial Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="#top" aria-label="ROOBOT home">
+                <span class="brand-mark"><span></span><span></span><span></span></span>
+                <span><strong>R.O.O.B.O.T.</strong><small>REAL-TIME OPPORTUNITY OBSERVER</small></span>
+            </a>
+            <div class="system-status"><span class="status-dot"></span><span id="connectionLabel">CORE SYSTEM
+                    ONLINE</span><span class="divider"></span><span id="clock">00:00:00 PKT</span></div>
+            <button class="icon-button" id="settingsButton" title="Settings" aria-label="Settings"><span
+                    class="sliders-icon">☷</span></button>
+        </header>
+
+        <main id="top">
+            <section class="hero-grid">
+                <div class="hero-copy">
+                    <p class="eyebrow"><span class="eyebrow-line"></span>FINANCIAL INTELLIGENCE / 01</p>
+                    <h1>Market ko<br /><em>sun'na</em> shuru.</h1>
+                    <p class="hero-description">Aap boliye. Main crypto, stocks aur forex ki aham khabrein scan karke
+                        Roman Urdu mein samjhaunga.</p>
+                    <div class="command-row">
+                        <button class="listen-button" id="listenButton"><span class="mic-symbol">●</span><span
+                                id="listenLabel">SUN'NA SHURU KAREIN</span><kbd>SPACE</kbd></button>
+                        <span class="hint-text">Button ke baghair sunne ke liye<br /><b>ALWAYS READY</b> mode on
+                            karein</span>
+                    </div>
+                </div>
+                <div class="robot-visual" aria-label="ROOBOT listening status visualization">
+                    <div class="robot-ring ring-outer"></div>
+                    <div class="robot-ring ring-middle"></div>
+                    <div class="robot-ring ring-inner"></div>
+                    <div class="radar-sweep"></div>
+                    <div class="robot-face">
+                        <div class="face-top"><span>ROOBOT // 001</span><span id="faceMode">STANDBY</span></div>
+                        <div class="robot-eyes"><i></i><i></i></div>
+                        <div class="robot-mouth"><b></b><b></b><b></b><b></b><b></b></div>
+                        <div class="face-bottom">VOICE CORE <span>●●●</span></div>
+                    </div>
+                    <div class="orbit-label label-one">VOICE INPUT <span>READY</span></div>
+                    <div class="orbit-label label-two">NEURAL LINK <span>98.4%</span></div>
+                    <div class="orbit-label label-three">SCANNING <span id="scanLabel">PAUSED</span></div>
+                </div>
+            </section>
+
+            <section class="control-strip">
+                <div class="strip-intro"><span class="section-number">01</span>
+                    <div><strong>COMMAND DECK</strong><small>Apni watchlist aur alerts control karein</small></div>
+                </div>
+                <div class="asset-tabs" id="assetTabs"><button class="asset-tab active" data-asset="ALL">ALL
+                        <span>12</span></button><button class="asset-tab" data-asset="CRYPTO">CRYPTO
+                        <span>04</span></button><button class="asset-tab" data-asset="STOCKS">STOCKS
+                        <span>05</span></button><button class="asset-tab" data-asset="FOREX">FOREX
+                        <span>03</span></button></div>
+                <label class="ready-toggle"><input id="alwaysReady" type="checkbox" /><span
+                        class="toggle-track"><span></span></span><span>ALWAYS READY</span></label>
+            </section>
+
+            <section class="dashboard-grid">
+                <div class="news-panel panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="panel-kicker">LIVE INTELLIGENCE FEED</p>
+                            <h2>Aaj ki market khabrein</h2>
+                        </div>
+                        <div class="live-badge"><span></span>LIVE SCAN</div>
+                    </div>
+                    <div class="search-box"><span>⌕</span><input id="searchInput"
+                            placeholder="Khabar, asset ya topic search karein..." /><kbd>⌘ K</kbd></div>
+                    <div class="news-list" id="newsList"></div>
+                    <button class="text-button" id="refreshButton"><span>↻</span>FEED REFRESH KAREIN <small
+                            id="lastUpdated">JUST NOW</small></button>
+                </div>
+                <aside class="side-column">
+                    <div class="brief-panel panel">
+                        <div class="panel-heading compact">
+                            <div>
+                                <p class="panel-kicker">ROOBOT SAYS</p>
+                                <h2>Market brief</h2>
+                            </div><span class="sparkle">✦</span>
+                        </div>
+                        <div class="brief-wave">
+                            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <p id="briefText">Aaj markets mixed hain. US dollar strong hai, jabke Bitcoin key resistance ke
+                            qareeb trade kar raha hai. High-impact events par nazar rakhein.</p><button
+                            class="outline-button" id="briefButton">▶ BRIEF SUNEIN</button>
+                    </div>
+                    <div class="events-panel panel">
+                        <div class="panel-heading compact">
+                            <div>
+                                <p class="panel-kicker">UP NEXT</p>
+                                <h2>High-impact events</h2>
+                            </div><span class="event-count">03</span>
+                        </div>
+                        <div class="event-item"><span class="event-time">18:30</span>
+                            <div><strong>US CPI DATA</strong><small>USD · HIGH IMPACT</small></div><span
+                                class="impact high">HIGH</span>
+                        </div>
+                        <div class="event-item"><span class="event-time">20:00</span>
+                            <div><strong>FED CHAIR SPEECH</strong><small>USD · HIGH IMPACT</small></div><span
+                                class="impact high">HIGH</span>
+                        </div>
+                        <div class="event-item"><span class="event-time">22:00</span>
+                            <div><strong>BTC ETF FLOWS</strong><small>CRYPTO · WATCH</small></div><span
+                                class="impact watch">WATCH</span>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="voice-console panel">
+                <div class="console-label"><span class="section-number">02</span>
+                    <div><strong>VOICE CONSOLE</strong><small id="transcriptStatus">Aapki awaaz ka intezar
+                            hai...</small></div>
+                </div>
+                <div class="transcript" id="transcript">“ Aap mujh se pooch sakte hain: Bitcoin ki latest khabar kya
+                    hai? ”</div>
+                <div class="console-actions"><span class="console-tip">Try: <b>“Mujhe high impact news
+                            batao”</b></span><button class="clear-button" id="clearTranscript">CLEAR</button></div>
+            </section>
+        </main>
+        <footer><span>R.O.O.B.O.T. CORE v1.0.4</span><span>DATA IS FOR INFORMATIONAL PURPOSES ONLY</span><span>© 2026 //
+                LOCAL INSTANCE</span></footer>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="app.js"></script>
+</body>
+
+</html>
