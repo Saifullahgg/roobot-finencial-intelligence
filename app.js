@@ -1,4 +1,4 @@
-const newsData = [
+let newsData = [
     { id: 1, time: "16:42", asset: "CRYPTO", title: "Bitcoin resistance ke qareeb, ETF flows par traders ki nazar", summary: "BTC $112K zone mein consolidate kar raha hai. Institutional inflows sentiment ko support kar rahe hain.", impact: "HIGH" },
     { id: 2, time: "16:18", asset: "STOCKS", title: "US futures green, tech stocks earnings se pehle recover", summary: "Nasdaq futures 0.42% upar. Semiconductor aur AI names mein buying interest dekha gaya.", impact: "WATCH" },
     { id: 3, time: "15:55", asset: "FOREX", title: "Dollar index strong, markets CPI release ka wait kar rahe hain", summary: "DXY 104.80 ke upar hold kar raha hai. EUR/USD par pressure barqarar hai.", impact: "HIGH" },
@@ -14,6 +14,25 @@ let recognition = null;
 let isListening = false;
 let alwaysReady = false;
 let speechSupported = false;
+let liveFeed = false;
+
+function escapeHtml(value = "") {
+    return String(value).replace(/[&<>]/g, (character) => {
+        if (character === "&") return "&";
+        if (character === "<") return "<";
+        return ">";
+    });
+}
+
+function safeArticleUrl(value = "") {
+    try {
+        const url = new URL(value);
+        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+    } catch (error) {
+        return "";
+    }
+}
+let knownHighImpactIds = new Set(newsData.filter((item) => item.impact === "HIGH").map((item) => item.id));
 
 function renderNews() {
     const query = $("#searchInput").value.trim().toLowerCase();
@@ -25,8 +44,8 @@ function renderNews() {
     newsList.innerHTML = visible.length ? visible.map((item) => `
     <article class="news-row">
       <time class="news-time">${item.time}</time>
-      <div class="news-copy"><strong>${item.title}</strong><p>${item.summary}</p></div>
-      <span class="tag ${item.asset.toLowerCase()}">${item.asset}</span>
+      <div class="news-copy"><strong>${safeArticleUrl(item.url) ? `<a href="${safeArticleUrl(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a>` : escapeHtml(item.title)}</strong><p>${escapeHtml(item.summary)}</p><small class="news-source">${escapeHtml(item.source || "ROOBOT feed")}${item.impact === "HIGH" ? " · HIGH IMPACT" : ""}</small></div>
+      <span class="tag ${escapeHtml(item.asset.toLowerCase())}">${escapeHtml(item.asset)}</span>
     </article>`).join("") : `<div class="empty-state">Is filter ke liye koi khabar nahi mili.</div>`;
 }
 
@@ -116,15 +135,35 @@ function setupRecognition() {
     };
 }
 
+async function loadLiveNews({ announce = false } = {}) {
+    try {
+        const response = await fetch("/api/news", { cache: "no-store" });
+        if (!response.ok) throw new Error(`API ${response.status}`);
+        const payload = await response.json();
+        if (Array.isArray(payload.items) && payload.items.length) newsData = payload.items;
+        liveFeed = Boolean(payload.live);
+        $("#connectionLabel").textContent = liveFeed ? "LIVE MARKET LINK ONLINE" : "DEMO FALLBACK ACTIVE";
+        $("#lastUpdated").textContent = liveFeed ? "LIVE · JUST NOW" : "FALLBACK · JUST NOW";
+        renderNews();
+        const newHighImpact = newsData.filter((item) => item.impact === "HIGH" && !knownHighImpactIds.has(item.id));
+        newHighImpact.forEach((item) => knownHighImpactIds.add(item.id));
+        if (announce && newHighImpact.length) {
+            const alert = `Nayi high impact khabar: ${newHighImpact[0].title}`;
+            showToast(alert); if (alwaysReady) speak(alert);
+        } else if (announce) showToast(payload.message || "Market intelligence feed updated.");
+    } catch (error) {
+        liveFeed = false;
+        $("#connectionLabel").textContent = "API OFFLINE · DEMO ACTIVE";
+        $("#lastUpdated").textContent = "OFFLINE FALLBACK";
+        if (announce) showToast("Live API unavailable — demo feed active hai.");
+    }
+}
+
 function refreshFeed() {
     const button = $("#refreshButton");
     button.disabled = true;
     button.style.opacity = ".5";
-    window.setTimeout(() => {
-        $("#lastUpdated").textContent = "JUST UPDATED";
-        button.disabled = false; button.style.opacity = "1";
-        showToast("Market intelligence feed updated.");
-    }, 650);
+    loadLiveNews({ announce: true }).finally(() => { button.disabled = false; button.style.opacity = "1"; });
 }
 
 $("#assetTabs").addEventListener("click", (event) => {
@@ -148,4 +187,6 @@ document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("#searchInput").focus(); }
 });
 function updateClock() { $("#clock").textContent = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date()) + " PKT"; }
-setupRecognition(); renderNews(); updateClock(); window.setInterval(updateClock, 1000);
+setupRecognition(); renderNews(); updateClock(); loadLiveNews();
+window.setInterval(updateClock, 1000);
+window.setInterval(() => loadLiveNews({ announce: true }), 5 * 60 * 1000);
