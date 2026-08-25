@@ -435,10 +435,13 @@ body {
 }
 
 .hero-robot {
+    --holo-color: #29d9ff;
+    --holo-glow: #29d9ff;
     position: relative;
     display: grid;
     place-items: center;
-    height: 260px
+    height: 260px;
+    isolation: isolate
 }
 
 .robot-halo {
@@ -446,26 +449,69 @@ body {
     width: 230px;
     height: 230px;
     border-radius: 50%;
-    background: radial-gradient(circle, #16adf51c, transparent 65%);
-    box-shadow: 0 0 50px #0bbdf522
+    background: radial-gradient(circle, color-mix(in srgb, var(--holo-color) 24%, transparent), transparent 65%);
+    box-shadow: 0 0 50px color-mix(in srgb, var(--holo-glow) 28%, transparent);
+    animation: holo-breathe 4s ease-in-out infinite
 }
 
 .orbit {
     position: absolute;
-    border: 1px solid #2bc9fc55;
-    border-radius: 50%
+    border: 1px solid color-mix(in srgb, var(--holo-color) 55%, transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--holo-glow) 42%, transparent), inset 0 0 12px color-mix(in srgb, var(--holo-glow) 16%, transparent);
+    will-change: transform
 }
 
 .orbit-a {
     width: 255px;
     height: 105px;
-    transform: rotate(-27deg)
+    animation: orbit-a-spin 8s linear infinite
 }
 
 .orbit-b {
     width: 205px;
     height: 180px;
-    transform: rotate(37deg)
+    animation: orbit-b-spin 11s linear infinite reverse
+}
+
+#voice[data-state="listening"]~* .hero-robot,
+body:has(#voice[data-state="listening"]) .hero-robot {
+    --holo-color: #3e8cff;
+    --holo-glow: #539cff
+}
+
+body:has(#voice[data-state="analyzing"]) .hero-robot {
+    --holo-color: #ffc45b;
+    --holo-glow: #ff9a3c
+}
+
+body:has(#voice[data-state="responding"]) .hero-robot {
+    --holo-color: #fc72e5;
+    --holo-glow: #b17cff
+}
+
+body:has(#voice[data-state="listening"]) .robot-halo {
+    animation: holo-listen .75s ease-in-out infinite
+}
+
+body:has(#voice[data-state="analyzing"]) .robot-halo {
+    animation: holo-analyze .5s ease-in-out infinite
+}
+
+body:has(#voice[data-state="responding"]) .robot-halo {
+    animation: holo-speak .38s ease-in-out infinite alternate
+}
+
+body:has(#voice[data-state="listening"]) .orbit-a,
+body:has(#voice[data-state="analyzing"]) .orbit-a,
+body:has(#voice[data-state="responding"]) .orbit-a {
+    animation-duration: 2.5s
+}
+
+body:has(#voice[data-state="listening"]) .orbit-b,
+body:has(#voice[data-state="analyzing"]) .orbit-b,
+body:has(#voice[data-state="responding"]) .orbit-b {
+    animation-duration: 3.5s
 }
 
 .bot-antenna {
@@ -1350,6 +1396,57 @@ body {
     display: none
 }
 
+@keyframes orbit-a-spin {
+    from {
+        transform: rotate(-27deg);
+    }
+
+    to {
+        transform: rotate(333deg);
+    }
+}
+
+@keyframes orbit-b-spin {
+    from {
+        transform: rotate(37deg);
+    }
+
+    to {
+        transform: rotate(397deg);
+    }
+}
+
+@keyframes holo-breathe {
+    50% {
+        transform: scale(1.08);
+        opacity: .92;
+    }
+}
+
+@keyframes holo-listen {
+    50% {
+        transform: scale(1.16);
+        opacity: 1;
+        filter: brightness(1.35);
+    }
+}
+
+@keyframes holo-analyze {
+    50% {
+        transform: scale(.92);
+        opacity: .75;
+        filter: brightness(1.45);
+    }
+}
+
+@keyframes holo-speak {
+    to {
+        transform: scale(1.19);
+        opacity: 1;
+        filter: brightness(1.65);
+    }
+}
+
 @keyframes pulse {
     50% {
         transform: scale(1.2);
@@ -1606,6 +1703,15 @@ body {
         flex-wrap: nowrap;
         overflow: auto;
         padding-bottom: 3px
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .robot-halo,
+        .orbit,
+        body:has(#voice[data-state]) .robot-halo {
+            animation: none
+        }
     }
 
     .category-pills button {
