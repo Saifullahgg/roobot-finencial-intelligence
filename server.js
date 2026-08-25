@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { URL } = require("node:url");
 const { getNews } = require("./lib/news");
+const chatHandler = require("./api/chat");
 
 loadEnvFile();
 const PORT = Number(process.env.PORT || 3000);
@@ -29,7 +30,19 @@ function sendJson(response, status, body) {
 const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
     if (requestUrl.pathname === "/api/news") return sendJson(response, 200, await getNews(process.env.GNEWS_API_KEY));
-    if (requestUrl.pathname === "/api/health") return sendJson(response, 200, { ok: true, liveProvider: Boolean(process.env.GNEWS_API_KEY), cached: false });
+    if (requestUrl.pathname === "/api/health") return sendJson(response, 200, {
+        ok: true,
+        liveProvider: Boolean(process.env.GNEWS_API_KEY),
+        aiProvider: Boolean(process.env.OPENAI_API_KEY),
+        cached: false
+    });
+    if (requestUrl.pathname === "/api/chat") {
+        if (request.method !== "POST") return sendJson(response, 405, { error: "Method not allowed" });
+        return chatHandler(request, {
+            setHeader: (name, value) => response.setHeader(name, value),
+            status: (code) => ({ json: (body) => sendJson(response, code, body) })
+        });
+    }
 
     const requested = requestUrl.pathname === "/" ? "index.html" : requestUrl.pathname.slice(1);
     const filePath = path.resolve(ROOT, requested);

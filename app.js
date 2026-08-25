@@ -16,6 +16,8 @@ let alwaysReady = false;
 let speechSupported = false;
 let liveFeed = false;
 let responseText = "";
+let conversation = [];
+let aiRequest = null;
 
 function escapeHtml(value = "") {
     const entityCodes = { 34: 34, 38: 38, 39: 39, 60: 60, 62: 62 };
@@ -72,13 +74,26 @@ function setRobotState(state) {
     $("#voice").dataset.state = state;
 }
 
+function chooseFemaleVoice() {
+    if (!("speechSynthesis" in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.filter((voice) => /female|woman|zira|samantha|susan|hazel|google uk english female|microsoft/i.test(voice.name));
+    const language = voices.filter((voice) => /ur(-|_)PK|hi(-|_)IN|en(-|_)IN|en(-|_)GB/i.test(voice.lang));
+    return preferred.find((voice) => /ur|hi|en/i.test(voice.lang)) || preferred[0] || language[0] || voices[0] || null;
+}
+
 function speak(text) {
     responseText = text;
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ur-PK";
-    utterance.rate = 0.94;
+    const voice = chooseFemaleVoice();
+    if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang;
+    } else utterance.lang = "ur-PK";
+    utterance.rate = 0.92;
+    utterance.pitch = 1.08;
     utterance.onstart = () => setRobotState("responding");
     utterance.onend = () => { if (!isListening) setRobotState("standby"); };
     window.speechSynthesis.speak(utterance);
@@ -92,26 +107,32 @@ function setListening(nextState) {
     setRobotState(nextState ? "listening" : "standby");
 }
 
-function respondToCommand(rawText) {
-    const text = rawText.toLowerCase();
+async function respondToCommand(rawText) {
+    const text = rawText.trim();
+    if (!text || aiRequest) return;
     setRobotState("analyzing");
-    let reply = "Command samajh nahi aaya. Aap market brief ya high impact news pooch sakte hain.";
-    if (text.includes("bitcoin") || text.includes("btc") || text.includes("crypto")) {
-        selectedAsset = "CRYPTO"; updateTabs(); reply = "Bitcoin resistance ke qareeb hai aur ETF flows important signal de rahe hain. Main crypto feed dikha raha hun.";
-    } else if (text.includes("stock") || text.includes("shares") || text.includes("nasdaq")) {
-        selectedAsset = "STOCKS"; updateTabs(); reply = "US futures green hain aur tech stocks mein recovery nazar aa rahi hai. Stocks feed khol diya hai.";
-    } else if (text.includes("forex") || text.includes("dollar") || text.includes("currency")) {
-        selectedAsset = "FOREX"; updateTabs(); reply = "Dollar index strong hai aur CPI se pehle forex volatility barh sakti hai. Forex feed dikha raha hun.";
-    } else if (text.includes("high impact") || text.includes("important") || text.includes("aham") || text.includes("impact")) {
-        reply = "Aaj ke high impact events US CPI aur Fed Chair speech hain. BTC ETF flows bhi watch list par hain.";
-    } else if (text.includes("brief") || text.includes("summary") || text.includes("khulasah")) {
-        reply = $("#briefText").textContent;
-    } else if (text.includes("refresh") || text.includes("update")) {
-        refreshFeed(); reply = "News feed refresh kar di hai.";
-    }
-    $("#transcript").textContent = `“ ${rawText} ”`;
-    speak(reply);
-    showToast(reply);
+    $("#transcript").textContent = `“ ${text} ”`;
+    conversation.push({ role: "user", content: text });
+    aiRequest = fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversation, news: newsData })
+    }).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || payload.error || "AI request failed");
+        const reply = String(payload.reply || "").trim();
+        conversation.push({ role: "assistant", content: reply });
+        $("#briefText").textContent = reply;
+        speak(reply);
+        showToast(reply);
+    }).catch((error) => {
+        conversation.pop();
+        const fallback = "AI assistant abhi available nahi hai. Aap news filter ya market brief buttons use kar sakte hain.";
+        setRobotState("standby");
+        showToast(error.message || fallback);
+        speak(fallback);
+    }).finally(() => { aiRequest = null; });
+    await aiRequest;
 }
 
 function updateTabs() {
@@ -261,6 +282,7 @@ document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("#searchInput").focus(); }
 });
 function updateClock() { $("#clock").textContent = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date()) + " PKT"; }
+if ("speechSynthesis" in window) window.speechSynthesis.onvoiceschanged = chooseFemaleVoice;
 setRobotState("standby"); setupRecognition(); renderNews(); updateClock(); loadLiveNews();
 window.setInterval(updateClock, 1000);
 window.setInterval(() => loadLiveNews({ announce: true }), 5 * 60 * 1000);
