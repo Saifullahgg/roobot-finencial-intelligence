@@ -4,141 +4,249 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#071013" />
-    <title>R.O.O.B.O.T. | Financial Intelligence</title>
+    <meta name="theme-color" content="#050914" />
+    <title>ROBOT News Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="app-shell">
-        <header class="topbar">
-            <a class="brand" href="#top" aria-label="ROOBOT home">
-                <span class="brand-mark"><span></span><span></span><span></span></span>
-                <span><strong>R.O.O.B.O.T.</strong><small>REAL-TIME OPPORTUNITY OBSERVER</small></span>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <div class="dashboard-shell">
+        <aside class="sidebar" id="sidebar">
+            <a class="logo" href="#home" aria-label="Robot News Intelligence home">
+                <span class="logo-bot"><i></i><b></b></span>
+                <span><strong>ROBOT</strong><small>NEWS INTELLIGENCE</small></span>
             </a>
-            <div class="system-status"><span class="status-dot"></span><span id="connectionLabel">CORE SYSTEM
-                    ONLINE</span><span class="divider"></span><span id="clock">00:00:00 PKT</span></div>
-            <button class="icon-button" id="settingsButton" title="Settings" aria-label="Settings"><span
-                    class="sliders-icon">☷</span></button>
-        </header>
-
-        <main id="top">
-            <section class="hero-grid">
-                <div class="hero-copy">
-                    <p class="eyebrow"><span class="eyebrow-line"></span>FINANCIAL INTELLIGENCE / 01</p>
-                    <h1>Market ko<br /><em>sun'na</em> shuru.</h1>
-                    <p class="hero-description">Aap boliye. Main crypto, stocks aur forex ki aham khabrein scan karke
-                        Roman Urdu mein samjhaunga.</p>
-                    <div class="command-row">
-                        <button class="listen-button" id="listenButton"><span class="mic-symbol">●</span><span
-                                id="listenLabel">SUN'NA SHURU KAREIN</span><kbd>SPACE</kbd></button>
-                        <span class="hint-text">Button ke baghair sunne ke liye<br /><b>ALWAYS READY</b> mode on
-                            karein</span>
-                    </div>
+            <nav class="side-nav" aria-label="Primary navigation">
+                <button class="nav-item active" data-page="home"><span>⌂</span>Home</button>
+                <button class="nav-item" data-page="news"><span>◫</span>Market News</button>
+                <button class="nav-item" data-page="analysis"><span>✦</span>AI Analysis</button>
+                <button class="nav-item" data-page="watchlist"><span>☆</span>Watchlist</button>
+                <button class="nav-item" data-page="voice"><span>◉</span>Voice Chat</button>
+                <button class="nav-item" data-page="alerts"><span>♢</span>Alert Center<i class="nav-ping"></i></button>
+                <button class="nav-item" data-page="settings"><span>⚙</span>Settings</button>
+            </nav>
+            <div class="side-status">
+                <div><small>ROBOT STATUS</small><strong><i></i><span id="sideRobotStatus">ONLINE</span></strong></div>
+                <div class="mini-robot"><span class="antenna"></span>
+                    <div class="mini-face"><i></i><i></i></div>
                 </div>
-                <div class="robot-visual" aria-label="ROOBOT listening status visualization">
-                    <div class="robot-ring ring-outer"></div>
-                    <div class="robot-ring ring-middle"></div>
-                    <div class="robot-ring ring-inner"></div>
-                    <div class="radar-sweep"></div>
-                    <div class="robot-face">
-                        <div class="face-top"><span>ROOBOT // 001</span><span id="faceMode">STANDBY</span></div>
-                        <div class="robot-eyes"><i></i><i></i></div>
-                        <div class="robot-mouth"><b></b><b></b><b></b><b></b><b></b></div>
-                        <div class="face-bottom">VOICE CORE <span>●●●</span></div>
-                    </div>
-                    <div class="orbit-label label-one">VOICE INPUT <span>READY</span></div>
-                    <div class="orbit-label label-two">NEURAL LINK <span>98.4%</span></div>
-                    <div class="orbit-label label-three">SCANNING <span id="scanLabel">PAUSED</span></div>
-                </div>
-            </section>
+                <div class="mini-wave"><b></b><b></b><b></b><b></b><b></b></div>
+            </div>
+        </aside>
 
-            <section class="control-strip">
-                <div class="strip-intro"><span class="section-number">01</span>
-                    <div><strong>COMMAND DECK</strong><small>Apni watchlist aur alerts control karein</small></div>
+        <main class="main-area" id="home">
+            <header class="topbar">
+                <button class="menu-button" id="menuButton" aria-label="Open menu">☰</button>
+                <div class="page-title"><small>ROBOT INTELLIGENCE /</small><strong>DASHBOARD</strong></div>
+                <div class="top-actions">
+                    <span class="system-link"><i></i><span id="connectionLabel">CORE SYSTEM ONLINE</span></span>
+                    <span class="clock" id="clock">00:00:00 PKT</span>
+                    <button class="square-button" id="settingsButton" aria-label="Settings">⚙</button>
+                    <span class="trader-avatar">ST</span>
                 </div>
-                <div class="asset-tabs" id="assetTabs"><button class="asset-tab active" data-asset="ALL">ALL
-                        <span>12</span></button><button class="asset-tab" data-asset="CRYPTO">CRYPTO
-                        <span>04</span></button><button class="asset-tab" data-asset="STOCKS">STOCKS
-                        <span>05</span></button><button class="asset-tab" data-asset="FOREX">FOREX
-                        <span>03</span></button></div>
-                <label class="ready-toggle"><input id="alwaysReady" type="checkbox" /><span
-                        class="toggle-track"><span></span></span><span>ALWAYS READY</span></label>
-            </section>
+            </header>
 
-            <section class="dashboard-grid">
-                <div class="news-panel panel">
-                    <div class="panel-heading">
-                        <div>
-                            <p class="panel-kicker">LIVE INTELLIGENCE FEED</p>
-                            <h2>Aaj ki market khabrein</h2>
+            <div class="content-wrap">
+                <section class="welcome-grid">
+                    <div class="welcome-copy">
+                        <span class="online-chip"><i></i> AI SYSTEM ONLINE</span>
+                        <p class="welcome-label">HELLO, TRADER <span>👋</span></p>
+                        <h1>Your market intelligence<br />has a <em>voice.</em></h1>
+                        <p>I am your Robot News Intelligence Assistant. I monitor crypto and global markets to surface
+                            the news that actually matters.</p>
+                        <div class="quick-prompts">
+                            <button data-command="Bitcoin ki latest news batao">Bitcoin update</button>
+                            <button data-command="High impact news batao">High-impact news</button>
+                            <button data-command="Market brief sunao">Market brief</button>
                         </div>
-                        <div class="live-badge"><span></span>LIVE SCAN</div>
                     </div>
-                    <div class="search-box"><span>⌕</span><input id="searchInput"
-                            placeholder="Khabar, asset ya topic search karein..." /><kbd>⌘ K</kbd></div>
+                    <div class="hero-robot" aria-label="Friendly robot assistant">
+                        <div class="robot-halo"></div>
+                        <div class="orbit orbit-a"></div>
+                        <div class="orbit orbit-b"></div>
+                        <div class="bot-antenna"><i></i></div>
+                        <div class="bot-head">
+                            <div class="bot-visor"><i></i><i></i></div>
+                            <div class="bot-mouth"></div>
+                        </div>
+                        <div class="bot-neck"></div>
+                        <div class="bot-body"><span>R</span><i></i><i></i></div>
+                        <span class="data-tag tag-a">MARKET SCAN <b>ACTIVE</b></span><span class="data-tag tag-b">NEURAL
+                            CORE <b>98.4%</b></span>
+                    </div>
+                </section>
+
+                <section class="dashboard-grid primary-grid">
+                    <article class="panel voice-command" id="voice">
+                        <div class="panel-head">
+                            <div><span class="section-icon">◉</span>
+                                <div><small>VOICE COMMAND CENTER</small>
+                                    <h2 id="voiceTitle">Tap to Speak</h2>
+                                </div>
+                            </div>
+                            <span class="status-pill" id="faceMode"><i></i>STANDBY</span>
+                        </div>
+                        <p class="voice-subtitle">Ask me anything about crypto, stocks, forex or high-impact market
+                            news.</p>
+                        <div class="voice-stage">
+                            <div class="waveform" id="voiceWave">
+                                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <button class="master-mic" id="listenButton" aria-label="Start voice command"><i
+                                    class="mic-icon"></i><span class="pulse-ring"></span></button>
+                            <strong id="listenLabel">TAP TO SPEAK</strong><small id="transcriptStatus">Aapki awaaz ka
+                                intezar hai...</small>
+                        </div>
+                        <div class="live-transcript" id="transcript">“ Bitcoin ki latest khabar kya hai? ”</div>
+                        <div class="voice-footer"><label><input id="alwaysReady" type="checkbox" /><span></span> Always
+                                Listening</label><button id="clearTranscript">Clear transcript</button></div>
+                    </article>
+
+                    <aside class="panel robot-status-card">
+                        <div class="panel-head">
+                            <div><span class="section-icon">R</span>
+                                <div><small>ASSISTANT CORE</small>
+                                    <h2>Robot Status</h2>
+                                </div>
+                            </div><span class="more">•••</span>
+                        </div>
+                        <div class="status-avatar">
+                            <div class="status-ring"></div>
+                            <div class="mini-robot large"><span class="antenna"></span>
+                                <div class="mini-face"><i></i><i></i></div>
+                            </div>
+                        </div>
+                        <h3><i></i><span id="scanLabel">Online & Ready</span></h3>
+                        <p>Market channels connected. Voice core is standing by.</p>
+                        <div class="signal-bars">
+                            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <div class="status-metrics"><span><small>NEWS
+                                    SCANNED</small><b>1,284</b></span><span><small>UPTIME</small><b>99.9%</b></span>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="panel robot-response">
+                    <div class="response-label"><span>✦</span>
+                        <div><small>ROBOT RESPONSE</small><strong>AI MARKET BRIEF</strong></div>
+                    </div>
+                    <div class="response-copy">
+                        <p id="briefText">Markets are mixed. Bitcoin is trading near a key resistance level while ETF
+                            activity and macro data remain the primary drivers. Monitor high-impact USD events closely.
+                        </p>
+                        <div class="response-meta"><span>● LIVE CONTEXT</span><span>CONFIDENCE
+                                <b>92%</b></span><span>IMPACT <b class="high-text">HIGH</b></span></div>
+                    </div>
+                    <div class="response-controls"><button id="briefButton">▶ Play</button><button
+                            id="pauseResponse">Ⅱ</button><button id="stopResponse">■</button></div>
+                </section>
+
+                <section class="dashboard-grid market-grid">
+                    <article class="panel market-card">
+                        <div class="panel-head">
+                            <div><span class="section-icon">↗</span>
+                                <div><small>REAL-TIME DATA</small>
+                                    <h2>Market Overview</h2>
+                                </div>
+                            </div><select id="marketAsset">
+                                <option>BTC / USDT</option>
+                                <option>ETH / USDT</option>
+                                <option>SOL / USDT</option>
+                            </select>
+                        </div>
+                        <div class="price-row">
+                            <div><span>BITCOIN</span><strong id="marketPrice">$68,427.20</strong><b
+                                    class="positive">+2.84% <small>24H</small></b></div>
+                            <div class="market-orb">₿</div>
+                        </div>
+                        <svg class="line-chart" viewBox="0 0 600 120" preserveAspectRatio="none"
+                            aria-label="Bitcoin price chart">
+                            <defs>
+                                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#10d9ff" stop-opacity=".3" />
+                                    <stop offset="1" stop-color="#10d9ff" stop-opacity="0" />
+                                </linearGradient>
+                            </defs>
+                            <path class="chart-fill"
+                                d="M0 95 C45 85 55 98 95 76 S155 80 185 58 S250 79 285 48 S340 62 375 34 S440 52 485 25 S550 35 600 10 L600 120 L0 120Z" />
+                            <path class="chart-line"
+                                d="M0 95 C45 85 55 98 95 76 S155 80 185 58 S250 79 285 48 S340 62 375 34 S440 52 485 25 S550 35 600 10" />
+                        </svg>
+                        <div class="market-stats"><span><small>MARKET CAP</small><b>$1.34T</b></span><span><small>24H
+                                    VOLUME</small><b>$32.8B</b></span><span><small>DOMINANCE</small><b>52.4%</b></span><span><small>SENTIMENT</small><b
+                                    class="positive">BULLISH</b></span></div>
+                    </article>
+
+                    <aside class="panel popular-card">
+                        <div class="panel-head">
+                            <div><span class="section-icon">◎</span>
+                                <div><small>LIVE PRICES</small>
+                                    <h2>Popular Coins</h2>
+                                </div>
+                            </div><button class="text-link">View all</button>
+                        </div>
+                        <div class="coin-list">
+                            <div><i
+                                    class="coin btc">₿</i><span><b>Bitcoin</b><small>BTC</small></span><strong>$68,427</strong><em
+                                    class="positive">+2.84%</em></div>
+                            <div><i
+                                    class="coin eth">Ξ</i><span><b>Ethereum</b><small>ETH</small></span><strong>$3,482</strong><em
+                                    class="positive">+1.72%</em></div>
+                            <div><i
+                                    class="coin sol">S</i><span><b>Solana</b><small>SOL</small></span><strong>$178.41</strong><em
+                                    class="negative">-0.63%</em></div>
+                            <div><i
+                                    class="coin xrp">X</i><span><b>XRP</b><small>XRP</small></span><strong>$0.612</strong><em
+                                    class="positive">+0.91%</em></div>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="news-section" id="news">
+                    <div class="section-heading">
+                        <div><small>ROBOT-CURATED INTELLIGENCE</small>
+                            <h2><span>🔥</span> Top Market News</h2>
+                        </div>
+                        <div class="news-tools">
+                            <div class="search-box"><span>⌕</span><input id="searchInput"
+                                    placeholder="Search intelligence..." /></div><button class="refresh-button"
+                                id="refreshButton">↻ Refresh <small id="lastUpdated">JUST NOW</small></button>
+                        </div>
+                    </div>
+                    <div class="category-pills" id="assetTabs"><button class="asset-tab active" data-asset="ALL">All
+                            News</button><button class="asset-tab" data-asset="CRYPTO">Bitcoin & Crypto</button><button
+                            class="asset-tab" data-asset="STOCKS">Stocks</button><button class="asset-tab"
+                            data-asset="FOREX">Forex & Macro</button><button data-topic="ETF">ETF</button><button
+                            data-topic="Regulation">Regulation</button><button data-topic="Security">Security</button>
+                    </div>
                     <div class="news-list" id="newsList"></div>
-                    <button class="text-button" id="refreshButton"><span>↻</span>FEED REFRESH KAREIN <small
-                            id="lastUpdated">JUST NOW</small></button>
-                </div>
-                <aside class="side-column">
-                    <div class="brief-panel panel">
-                        <div class="panel-heading compact">
-                            <div>
-                                <p class="panel-kicker">ROOBOT SAYS</p>
-                                <h2>Market brief</h2>
-                            </div><span class="sparkle">✦</span>
-                        </div>
-                        <div class="brief-wave">
-                            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-                        </div>
-                        <p id="briefText">Aaj markets mixed hain. US dollar strong hai, jabke Bitcoin key resistance ke
-                            qareeb trade kar raha hai. High-impact events par nazar rakhein.</p><button
-                            class="outline-button" id="briefButton">▶ BRIEF SUNEIN</button>
-                    </div>
-                    <div class="events-panel panel">
-                        <div class="panel-heading compact">
-                            <div>
-                                <p class="panel-kicker">UP NEXT</p>
-                                <h2>High-impact events</h2>
-                            </div><span class="event-count">03</span>
-                        </div>
-                        <div class="event-item"><span class="event-time">18:30</span>
-                            <div><strong>US CPI DATA</strong><small>USD · HIGH IMPACT</small></div><span
-                                class="impact high">HIGH</span>
-                        </div>
-                        <div class="event-item"><span class="event-time">20:00</span>
-                            <div><strong>FED CHAIR SPEECH</strong><small>USD · HIGH IMPACT</small></div><span
-                                class="impact high">HIGH</span>
-                        </div>
-                        <div class="event-item"><span class="event-time">22:00</span>
-                            <div><strong>BTC ETF FLOWS</strong><small>CRYPTO · WATCH</small></div><span
-                                class="impact watch">WATCH</span>
-                        </div>
-                    </div>
-                </aside>
-            </section>
+                </section>
 
-            <section class="voice-console panel">
-                <div class="console-label"><span class="section-number">02</span>
-                    <div><strong>VOICE CONSOLE</strong><small id="transcriptStatus">Aapki awaaz ka intezar
-                            hai...</small></div>
-                </div>
-                <div class="transcript" id="transcript">“ Aap mujh se pooch sakte hain: Bitcoin ki latest khabar kya
-                    hai? ”</div>
-                <div class="console-actions"><span class="console-tip">Try: <b>“Mujhe high impact news
-                            batao”</b></span><button class="clear-button" id="clearTranscript">CLEAR</button></div>
-            </section>
+                <footer><span>ROBOT NEWS INTELLIGENCE v2.0</span><span>Intelligence, not financial
+                        advice.</span><span>SECURE AI CONNECTION</span></footer>
+            </div>
         </main>
-        <footer><span>R.O.O.B.O.T. CORE v1.0.4</span><span>DATA IS FOR INFORMATIONAL PURPOSES ONLY</span><span>© 2026 //
-                LOCAL INSTANCE</span></footer>
     </div>
+
+    <div class="floating-assistant">
+        <button class="float-side" data-command="Market brief sunao">💬 <span>Ask Robot</span></button>
+        <button class="float-mic" id="floatingMic" aria-label="Tap to speak"><span class="mic-icon"></span></button>
+        <button class="float-side" data-command="High impact news batao"><span>Voice Chat</span> 🎙</button>
+        <small>TAP TO SPEAK</small>
+    </div>
+
+    <nav class="mobile-nav"><button class="active" data-page="home">⌂<span>Home</span></button><button
+            data-page="news">◫<span>News</span></button><button
+            data-page="analysis">✦<span>Analysis</span></button><span class="nav-space"></span><button
+            data-page="watchlist">☆<span>Watchlist</span></button><button
+            data-page="alerts">♢<span>Alerts</span></button></nav>
     <div class="toast" id="toast" role="status"></div>
     <script src="app.js"></script>
 </body>

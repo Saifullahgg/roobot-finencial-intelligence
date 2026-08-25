@@ -15,13 +15,13 @@ let isListening = false;
 let alwaysReady = false;
 let speechSupported = false;
 let liveFeed = false;
+let responseText = "";
 
 function escapeHtml(value = "") {
-    return String(value).replace(/[&<>]/g, (character) => {
-        if (character === "&") return "&";
-        if (character === "<") return "<";
-        return ">";
-    });
+    const entityCodes = { 34: 34, 38: 38, 39: 39, 60: 60, 62: 62 };
+    return String(value).replace(/[&<>"']/g, (character) =>
+        String.fromCharCode(38, 35) + entityCodes[character.charCodeAt(0)] + String.fromCharCode(59)
+    );
 }
 
 function safeArticleUrl(value = "") {
@@ -57,26 +57,44 @@ function showToast(message) {
     showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
+function setRobotState(state) {
+    const labels = {
+        standby: ["STANDBY", "Online & Ready", "Aapki awaaz ka intezar hai..."],
+        listening: ["LISTENING", "Listening...", "Aap bol sakte hain..."],
+        analyzing: ["ANALYZING", "Analyzing...", "Market data samjha ja raha hai..."],
+        responding: ["RESPONDING", "Speaking...", "Robot aapko jawab de raha hai..."]
+    };
+    const [mode, scan, status] = labels[state] || labels.standby;
+    $("#faceMode").textContent = mode;
+    $("#scanLabel").textContent = scan;
+    $("#transcriptStatus").textContent = status;
+    $("#voiceTitle").textContent = state === "standby" ? "Tap to Speak" : mode[0] + mode.slice(1).toLowerCase();
+    $("#voice").dataset.state = state;
+}
+
 function speak(text) {
+    responseText = text;
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "ur-PK";
     utterance.rate = 0.94;
+    utterance.onstart = () => setRobotState("responding");
+    utterance.onend = () => { if (!isListening) setRobotState("standby"); };
     window.speechSynthesis.speak(utterance);
 }
 
 function setListening(nextState) {
     isListening = nextState;
     $("#listenButton").classList.toggle("listening", nextState);
-    $("#listenLabel").textContent = nextState ? "MAIN SUN RAHA HUN..." : "SUN'NA SHURU KAREIN";
-    $("#faceMode").textContent = nextState ? "LISTENING" : "STANDBY";
-    $("#scanLabel").textContent = nextState ? "ACTIVE" : "PAUSED";
-    $("#transcriptStatus").textContent = nextState ? "Aap bol sakte hain..." : "Aapki awaaz ka intezar hai...";
+    $("#floatingMic").classList.toggle("listening", nextState);
+    $("#listenLabel").textContent = nextState ? "MAIN SUN RAHA HUN..." : "TAP TO SPEAK";
+    setRobotState(nextState ? "listening" : "standby");
 }
 
 function respondToCommand(rawText) {
     const text = rawText.toLowerCase();
+    setRobotState("analyzing");
     let reply = "Command samajh nahi aaya. Aap market brief ya high impact news pooch sakte hain.";
     if (text.includes("bitcoin") || text.includes("btc") || text.includes("crypto")) {
         selectedAsset = "CRYPTO"; updateTabs(); reply = "Bitcoin resistance ke qareeb hai aur ETF flows important signal de rahe hain. Main crypto feed dikha raha hun.";
@@ -99,6 +117,35 @@ function respondToCommand(rawText) {
 function updateTabs() {
     document.querySelectorAll(".asset-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.asset === selectedAsset));
     renderNews();
+}
+
+function runCommand(command) {
+    respondToCommand(command);
+    $("#voice").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function navigateTo(page) {
+    const targets = { home: "#home", news: "#news", voice: "#voice" };
+    if (targets[page]) $(targets[page]).scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!targets[page]) showToast(`${page[0].toUpperCase()}${page.slice(1)} module ready hai.`);
+    document.querySelectorAll("[data-page]").forEach((item) => item.classList.toggle("active", item.dataset.page === page));
+    $("#sidebar").classList.remove("open");
+}
+
+function updateMarketAsset(asset) {
+    const values = {
+        "BTC / USDT": ["BITCOIN", "$68,427.20", "+2.84%"],
+        "ETH / USDT": ["ETHEREUM", "$3,482.00", "+1.72%"],
+        "SOL / USDT": ["SOLANA", "$178.41", "-0.63%"]
+    };
+    const [name, price, change] = values[asset] || values["BTC / USDT"];
+    const priceNode = $("#marketPrice");
+    const changeNode = priceNode.nextElementSibling;
+    priceNode.previousElementSibling.textContent = name;
+    priceNode.textContent = price;
+    changeNode.childNodes[0].textContent = `${change} `;
+    changeNode.classList.toggle("positive", change.startsWith("+"));
+    changeNode.classList.toggle("negative", change.startsWith("-"));
 }
 
 function stopRecognition() {
@@ -170,19 +217,43 @@ function refreshFeed() {
 }
 
 $("#assetTabs").addEventListener("click", (event) => {
-    const tab = event.target.closest(".asset-tab");
+    const tab = event.target.closest("button");
     if (!tab) return;
-    selectedAsset = tab.dataset.asset; updateTabs();
+    if (tab.dataset.asset) {
+        selectedAsset = tab.dataset.asset;
+        $("#searchInput").value = "";
+        updateTabs();
+    } else if (tab.dataset.topic) {
+        document.querySelectorAll("#assetTabs button").forEach((item) => item.classList.toggle("active", item === tab));
+        $("#searchInput").value = tab.dataset.topic;
+        renderNews();
+        showToast(`${tab.dataset.topic} intelligence filter active hai.`);
+    }
 });
 $("#searchInput").addEventListener("input", renderNews);
 $("#refreshButton").addEventListener("click", refreshFeed);
 $("#listenButton").addEventListener("click", () => isListening ? stopRecognition() : startRecognition());
+$("#floatingMic").addEventListener("click", () => isListening ? stopRecognition() : startRecognition());
+document.querySelectorAll("[data-command]").forEach((button) => button.addEventListener("click", () => runCommand(button.dataset.command)));
+document.querySelectorAll("[data-page]").forEach((button) => button.addEventListener("click", () => navigateTo(button.dataset.page)));
+$("#menuButton").addEventListener("click", () => $("#sidebar").classList.toggle("open"));
+$("#marketAsset").addEventListener("change", (event) => updateMarketAsset(event.target.value));
 $("#alwaysReady").addEventListener("change", (event) => {
     alwaysReady = event.target.checked;
     if (alwaysReady) { startRecognition(); showToast("Always Ready mode active hai."); }
     else { stopRecognition(); showToast("Always Ready mode band kar diya."); }
 });
 $("#briefButton").addEventListener("click", () => { speak($("#briefText").textContent); showToast("Market brief play ho raha hai."); });
+$("#pauseResponse").addEventListener("click", () => {
+    if (!("speechSynthesis" in window)) return;
+    if (window.speechSynthesis.paused) { window.speechSynthesis.resume(); showToast("Robot response resume ho raha hai."); }
+    else { window.speechSynthesis.pause(); showToast("Robot response pause kar diya hai."); }
+});
+$("#stopResponse").addEventListener("click", () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setRobotState("standby");
+    showToast("Robot response stop kar diya hai.");
+});
 $("#clearTranscript").addEventListener("click", () => { $("#transcript").textContent = "“  Aap mujh se pooch sakte hain: Bitcoin ki latest khabar kya hai?  ”"; });
 $("#settingsButton").addEventListener("click", () => showToast("Voice: Urdu PK · Auto-scan: ready · Alerts: high impact"));
 document.addEventListener("keydown", (event) => {
@@ -190,6 +261,6 @@ document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("#searchInput").focus(); }
 });
 function updateClock() { $("#clock").textContent = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date()) + " PKT"; }
-setupRecognition(); renderNews(); updateClock(); loadLiveNews();
+setRobotState("standby"); setupRecognition(); renderNews(); updateClock(); loadLiveNews();
 window.setInterval(updateClock, 1000);
 window.setInterval(() => loadLiveNews({ announce: true }), 5 * 60 * 1000);
