@@ -107,32 +107,71 @@ function setListening(nextState) {
     setRobotState(nextState ? "listening" : "standby");
 }
 
-async function respondToCommand(rawText) {
+function getMarketItems(asset = selectedAsset) {
+    return newsData.filter((item) => asset === "ALL" || item.asset === asset);
+}
+
+function marketSummary(asset = selectedAsset) {
+    const items = getMarketItems(asset);
+    if (!items.length) return "Is market ke liye abhi feed mein news available nahi hai.";
+    const lead = items[0];
+    const highCount = items.filter((item) => item.impact === "HIGH").length;
+    const label = asset === "ALL" ? "overall markets" : asset.toLowerCase();
+    return `${label} mein ${items.length} updates milay hain. Sab se important update: ${lead.title}. ${highCount ? `${highCount} high-impact alert${highCount > 1 ? "s" : ""} bhi watch par hain.` : "Filhal koi high-impact alert nahi mila."}`;
+}
+
+function localAssistantReply(rawText) {
+    const text = rawText.toLowerCase().replace(/[?!.,]/g, " ").replace(/\s+/g, " ").trim();
+    const latest = newsData[0];
+    const highImpact = newsData.filter((item) => item.impact === "HIGH");
+    const has = (...words) => words.some((word) => text.includes(word));
+    let reply;
+
+    if (has("hello", "hi", "salam", "assalam", "hey", "aoa")) {
+        reply = "Walaikum assalam. Main ROOBOT hun, aapka market intelligence assistant. Aaj kis market ko scan karun?";
+    } else if (has("thank", "shukriya", "thanks")) {
+        reply = "Khushi hui. Main aapke liye crypto, stocks aur forex monitor karta rahunga.";
+    } else if (has("tum kon", "who are", "what can", "kya kar sakte", "capabilit")) {
+        reply = "Main Roman Urdu ya English mein aap se baat kar sakta hun, live news summarize kar sakta hun, market filters change kar sakta hun aur high-impact updates identify kar sakta hun.";
+    } else if (has("bitcoin", "btc", "crypto", "cryptocurrency")) {
+        selectedAsset = "CRYPTO"; updateTabs();
+        reply = `Crypto feed active kar di hai. ${marketSummary("CRYPTO")}`;
+    } else if (has("stock", "shares", "nasdaq", "equity", "stocks")) {
+        selectedAsset = "STOCKS"; updateTabs();
+        reply = `Stocks feed active kar di hai. ${marketSummary("STOCKS")}`;
+    } else if (has("forex", "dollar", "currency", "eur", "yen", "pound", "fx")) {
+        selectedAsset = "FOREX"; updateTabs();
+        reply = `Forex feed active kar di hai. ${marketSummary("FOREX")}`;
+    } else if (has("high impact", "important", "aham", "impact", "alert", "urgent")) {
+        reply = highImpact.length ? `High-impact updates ${highImpact.length} hain. ${highImpact.slice(0, 2).map((item) => item.title).join(" Aur ")}` : "Filhal feed mein high-impact alert nahi mila.";
+    } else if (has("latest", "newest", "recent", "taza", "news", "khabar", "update")) {
+        reply = latest ? `Latest update: ${latest.title}. ${latest.summary}` : "Live feed se abhi news receive nahi hui.";
+    } else if (has("brief", "summary", "summarize", "khulasah", "market kaisa", "markets")) {
+        reply = marketSummary("ALL");
+    } else if (has("refresh", "reload", "dobara")) {
+        refreshFeed();
+        reply = "Feed refresh kar raha hun. Naya data aate hi dashboard update ho jayega.";
+    } else if (has("risk", "safe", "invest", "buy", "sell", "trade")) {
+        reply = "Market decisions mein risk management zaroori hai. Main factual news aur possible impact explain kar sakta hun, lekin guaranteed buy ya sell signal nahi de sakta.";
+    } else if (has("weather", "time", "joke", "story")) {
+        reply = "Main abhi financial intelligence ke liye optimized hun. Crypto, stocks, forex ya market news ke bare mein poochain.";
+    } else {
+        reply = "Main aapki baat samajhne ki koshish kar raha hun. Aap keh sakte hain: Bitcoin ki latest news, market brief, high-impact alerts, ya stocks ka update.";
+    }
+    return reply;
+}
+
+function respondToCommand(rawText) {
     const text = rawText.trim();
-    if (!text || aiRequest) return;
+    if (!text) return;
     setRobotState("analyzing");
     $("#transcript").textContent = `“ ${text} ”`;
     conversation.push({ role: "user", content: text });
-    aiRequest = fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation, news: newsData })
-    }).then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message || payload.error || "AI request failed");
-        const reply = String(payload.reply || "").trim();
-        conversation.push({ role: "assistant", content: reply });
-        $("#briefText").textContent = reply;
-        speak(reply);
-        showToast(reply);
-    }).catch((error) => {
-        conversation.pop();
-        const fallback = "AI assistant abhi available nahi hai. Aap news filter ya market brief buttons use kar sakte hain.";
-        setRobotState("standby");
-        showToast(error.message || fallback);
-        speak(fallback);
-    }).finally(() => { aiRequest = null; });
-    await aiRequest;
+    const reply = localAssistantReply(text);
+    conversation.push({ role: "assistant", content: reply });
+    conversation = conversation.slice(-12);
+    $("#briefText").textContent = reply;
+    window.setTimeout(() => { speak(reply); showToast(reply); }, 180);
 }
 
 function updateTabs() {
