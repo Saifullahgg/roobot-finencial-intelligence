@@ -1725,3 +1725,82 @@ body:has(#voice[data-state="responding"]) .orbit-b {
         max-width: none
     }
 }
+
+.intelligence-grid {
+    margin-top: 24px;
+    align-items: stretch;
+}
+
+.intelligence-card {
+    min-width: 0;
+    padding-bottom: 16px;
+}
+
+.card-hint {
+    margin: -5px 0 16px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.event-list,
+.airdrop-list {
+    display: grid;
+    gap: 10px;
+}
+
+.intel-item {
+    padding: 13px 14px;
+    border: 1px solid #173a59;
+    border-radius: 9px;
+    background: linear-gradient(110deg, #0c2036, #091425);
+}
+
+.intel-item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.intel-item strong {
+    font: 600 13px 'Chakra Petch';
+    line-height: 1.35;
+}
+
+.intel-item p {
+    margin: 7px 0 5px;
+    color: var(--cyan);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.intel-item small {
+    display: block;
+    color: var(--dim);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.score-high,
+.airdrop-status {
+    flex: 0 0 auto;
+    padding: 4px 7px;
+    border-radius: 4px;
+    color: var(--green);
+    background: #123b35;
+    font: 600 9px 'Chakra Petch';
+    letter-spacing: .06em;
+}
+
+.airdrop-status {
+    color: #ffd479;
+    background: #44381b;
+}
+
+@media (max-width: 800px) {
+    .intelligence-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}

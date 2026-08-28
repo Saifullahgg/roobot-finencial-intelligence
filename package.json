@@ -5,6 +5,6 @@
   "description": "Voice-first Roman Urdu financial intelligence dashboard",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check app.js && node --check server.js && node --check lib/news.js && node --check api/news.js && node --check api/health.js"
+    "check": "node --check app.js && node --check server.js && node --check lib/news.js && node --check lib/intelligence.js && node --check lib/market.js && node --check api/news.js && node --check api/intelligence.js && node --check api/market.js && node --check api/health.js"
   }
 }

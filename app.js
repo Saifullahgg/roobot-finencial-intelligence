@@ -14,10 +14,14 @@ let recognition = null;
 let isListening = false;
 let alwaysReady = false;
 let speechSupported = false;
+let recognitionLanguage = "en-PK";
 let liveFeed = false;
 let responseText = "";
 let conversation = [];
 let aiRequest = null;
+let intelligenceData = null;
+
+let marketData = null;
 
 function escapeHtml(value = "") {
     const entityCodes = { 34: 34, 38: 38, 39: 39, 60: 60, 62: 62 };
@@ -70,7 +74,7 @@ function setRobotState(state) {
     $("#faceMode").textContent = mode;
     $("#scanLabel").textContent = scan;
     $("#transcriptStatus").textContent = status;
-    $("#voiceTitle").textContent = state === "standby" ? "Tap to Speak" : mode[0] + mode.slice(1).toLowerCase();
+    $("#voiceTitle").textContent = state === "standby" ? "Ask Robot" : mode[0] + mode.slice(1).toLowerCase();
     $("#voice").dataset.state = state;
 }
 
@@ -146,6 +150,12 @@ function localAssistantReply(rawText) {
         reply = highImpact.length ? `High-impact updates ${highImpact.length} hain. ${highImpact.slice(0, 2).map((item) => item.title).join(" Aur ")}` : "Filhal feed mein high-impact alert nahi mila.";
     } else if (has("latest", "newest", "recent", "taza", "news", "khabar", "update")) {
         reply = latest ? `Latest update: ${latest.title}. ${latest.summary}` : "Live feed se abhi news receive nahi hui.";
+    } else if (has("event", "calendar", "cpi", "nfp", "fomc", "aanay wali", "upcoming", "kab news")) {
+        const event = intelligenceData?.events?.[0];
+        reply = event ? `Agla high-impact event ${event.title} hai, ${formatPktTime(event.scheduledAt)}. Mutasir assets: ${event.affectedAssets.join(", ")}. ${event.baseCase} Confidence ${event.confidence} percent.` : "Upcoming events ka data abhi load ho raha hai.";
+    } else if (has("airdrop", "air drop", "claim", "testnet", "points")) {
+        const item = intelligenceData?.airdrops?.[0];
+        reply = item ? `Airdrop radar mein ${item.project} ${item.status} status ke sath listed hai. Confidence ${item.confidence} percent aur risk ${item.risk} hai. ${item.safety}` : "Airdrop radar ka data abhi load ho raha hai.";
     } else if (has("brief", "summary", "summarize", "khulasah", "market kaisa", "markets")) {
         reply = marketSummary("ALL");
     } else if (has("refresh", "reload", "dobara")) {
@@ -159,6 +169,32 @@ function localAssistantReply(rawText) {
         reply = "Main aapki baat samajhne ki koshish kar raha hun. Aap keh sakte hain: Bitcoin ki latest news, market brief, high-impact alerts, ya stocks ka update.";
     }
     return reply;
+}
+
+function formatPktTime(value) {
+    return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) + " PKT";
+}
+
+function renderIntelligence(payload) {
+    intelligenceData = payload;
+    const events = payload.events || [];
+    const airdrops = payload.airdrops || [];
+    $("#eventCount").textContent = `${events.length} TRACKED`;
+    $("#airdropCount").textContent = `${airdrops.length} TRACKED`;
+    $("#eventList").innerHTML = events.map((event) => `<div class="intel-item"><div class="intel-item-head"><strong>${escapeHtml(event.title)}</strong><span class="score-high">${event.impactScore}/100</span></div><p>${escapeHtml(formatPktTime(event.scheduledAt))} · ${escapeHtml(event.affectedAssets.join(", "))}</p><small>${escapeHtml(event.baseCase)} Confidence: ${event.confidence}%</small></div>`).join("");
+    $("#airdropList").innerHTML = airdrops.map((item) => `<div class="intel-item"><div class="intel-item-head"><strong>${escapeHtml(item.project)}</strong><span class="airdrop-status">${escapeHtml(item.status)}</span></div><p>${escapeHtml(item.chain)} · Risk ${escapeHtml(item.risk)} · Score ${item.opportunityScore}/100</p><small>${escapeHtml(item.requirement)}</small></div>`).join("");
+}
+
+async function loadIntelligence() {
+    try {
+        const response = await fetch(`/api/intelligence?ts=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`API ${response.status}`);
+        renderIntelligence(await response.json());
+    } catch (error) {
+        $("#eventList").innerHTML = `<div class="empty-state">Intelligence API abhi available nahi hai.</div>`;
+        $("#airdropList").innerHTML = `<div class="empty-state">Airdrop radar abhi available nahi hai.</div>`;
+        console.error("ROOBOT intelligence error:", error);
+    }
 }
 
 function respondToCommand(rawText) {
@@ -193,19 +229,76 @@ function navigateTo(page) {
 }
 
 function updateMarketAsset(asset) {
-    const values = {
-        "BTC / USDT": ["BITCOIN", "$68,427.20", "+2.84%"],
-        "ETH / USDT": ["ETHEREUM", "$3,482.00", "+1.72%"],
-        "SOL / USDT": ["SOLANA", "$178.41", "-0.63%"]
-    };
-    const [name, price, change] = values[asset] || values["BTC / USDT"];
+    const symbolNode = $("#marketPrice").previousElementSibling;
     const priceNode = $("#marketPrice");
     const changeNode = priceNode.nextElementSibling;
-    priceNode.previousElementSibling.textContent = name;
-    priceNode.textContent = price;
-    changeNode.childNodes[0].textContent = `${change} `;
-    changeNode.classList.toggle("positive", change.startsWith("+"));
-    changeNode.classList.toggle("negative", change.startsWith("-"));
+    const orb = document.querySelector(".market-orb");
+
+    if (!marketData || !marketData.crypto.length) {
+        symbolNode.textContent = asset.split(" / ")[0];
+        priceNode.textContent = "No live data";
+        changeNode.childNodes[0].textContent = "— ";
+        changeNode.classList.remove("positive", "negative");
+        if (orb) orb.textContent = "?";
+        $("#marketConnectionText").textContent = "OFFLINE";
+        return;
+    }
+
+    const symbol = asset.split(" / ")[0];
+    const coin = marketData.crypto.find((c) => c.symbol === symbol) || marketData.crypto[0];
+    symbolNode.textContent = coin.name.toUpperCase();
+    priceNode.textContent = coin.price ? `$${coin.price.toLocaleString()}` : "N/A";
+    const changeText = coin.change24h !== null ? `${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%` : "N/A";
+    changeNode.childNodes[0].textContent = `${changeText} `;
+    changeNode.classList.toggle("positive", coin.change24h > 0);
+    changeNode.classList.toggle("negative", coin.change24h < 0);
+    if (orb) orb.textContent = coin.symbol ? coin.symbol.charAt(0) : "₿";
+    $("#marketConnectionText").textContent = marketData.cryptoError || marketData.forexError ? "DEGRADED" : "LIVE";
+}
+
+function renderPopularCoins() {
+    const container = $("#popularCoins");
+    if (!container) return;
+    if (!marketData || !marketData.crypto.length) {
+        container.innerHTML = `<div class="empty-state">Live coin prices abhi available nahi hain.</div>`;
+        return;
+    }
+    const coins = marketData.crypto.slice(0, 4);
+    container.innerHTML = coins.map((coin) => {
+        const changeClass = coin.change24h > 0 ? "positive" : coin.change24h < 0 ? "negative" : "";
+        const changeText = coin.change24h !== null ? `${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%` : "N/A";
+        return `<div><i class="coin ${coin.symbol.toLowerCase()}">${coin.symbol.charAt(0)}</i><span><b>${escapeHtml(coin.name)}</b><small>${escapeHtml(coin.symbol)}</small></span><strong>${coin.price ? `$${coin.price.toLocaleString()}` : "N/A"}</strong><em class="${changeClass}">${changeText}</em></div>`;
+    }).join("");
+}
+
+function updateMarketStats() {
+    if (!marketData || !marketData.crypto.length) return;
+    const capNode = document.querySelector(".market-stats span:nth-child(1) b");
+    const volNode = document.querySelector(".market-stats span:nth-child(2) b");
+    const domNode = document.querySelector(".market-stats span:nth-child(3) b");
+    const sentNode = document.querySelector(".market-stats span:nth-child(4) b");
+    if (capNode && marketData.crypto[0]?.marketCap) capNode.textContent = `$${(marketData.crypto[0].marketCap / 1e12).toFixed(2)}T`;
+    if (volNode && marketData.crypto[0]?.volume24h) volNode.textContent = `$${(marketData.crypto[0].volume24h / 1e9).toFixed(1)}B`;
+    if (domNode && marketData.summary.btcDominance !== null) domNode.textContent = `${marketData.summary.btcDominance}%`;
+    if (sentNode && marketData.summary.marketSentiment) {
+        sentNode.textContent = marketData.summary.marketSentiment;
+        sentNode.className = marketData.summary.marketSentiment === "BULLISH" ? "positive" : marketData.summary.marketSentiment === "BEARISH" ? "negative" : "";
+    }
+}
+
+async function loadMarketData() {
+    try {
+        const response = await fetch(`/api/market?ts=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`API ${response.status}`);
+        marketData = await response.json();
+        const selectedAsset = $("#marketAsset").value;
+        updateMarketAsset(selectedAsset);
+        renderPopularCoins();
+        updateMarketStats();
+    } catch (error) {
+        console.error("ROOBOT market data error:", error);
+        $("#marketConnectionText").textContent = "ERROR";
+    }
 }
 
 function stopRecognition() {
@@ -214,8 +307,9 @@ function stopRecognition() {
 }
 
 function startRecognition() {
-    if (!speechSupported) { showToast("Is browser mein voice recognition supported nahi hai."); return; }
-    try { recognition.start(); } catch (error) { /* already running */ }
+    if (!speechSupported) { showToast("Is browser mein voice recognition supported nahi hai. Text buttons istemal karein."); return; }
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    try { recognition.start(); } catch (error) { /* recognition pehle se running hai */ }
 }
 
 function setupRecognition() {
@@ -223,18 +317,27 @@ function setupRecognition() {
     if (!Recognition) { $("#connectionLabel").textContent = "VOICE API UNAVAILABLE"; return; }
     speechSupported = true;
     recognition = new Recognition();
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = "ur-PK";
+    recognition.maxAlternatives = 3;
+    recognition.lang = recognitionLanguage;
     recognition.onstart = () => setListening(true);
     recognition.onresult = (event) => {
         const result = event.results[event.results.length - 1];
-        const text = result[0].transcript;
+        const alternatives = Array.from(result).map((item) => item.transcript.trim()).filter(Boolean);
+        const text = alternatives.sort((a, b) => b.length - a.length)[0] || "";
         $("#transcript").textContent = `“ ${text} ”`;
-        if (result.isFinal) respondToCommand(text);
+        if (result.isFinal && text) respondToCommand(text);
     };
     recognition.onerror = (event) => {
-        if (event.error === "not-allowed") { alwaysReady = false; $("#alwaysReady").checked = false; showToast("Microphone permission allow karna zaroori hai."); }
+        const messages = {
+            "not-allowed": "Microphone permission allow karna zaroori hai.",
+            "no-speech": "Awaaz samajh nahi aayi. Mic ke qareeb dobara bolain.",
+            "audio-capture": "Microphone available nahi hai.",
+            network: "Voice service network se connect nahi ho saki."
+        };
+        if (event.error === "not-allowed") { alwaysReady = false; $("#alwaysReady").checked = false; }
+        showToast(messages[event.error] || `Voice error: ${event.error}`);
     };
     recognition.onend = () => {
         setListening(false);
@@ -322,6 +425,7 @@ document.addEventListener("keydown", (event) => {
 });
 function updateClock() { $("#clock").textContent = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date()) + " PKT"; }
 if ("speechSynthesis" in window) window.speechSynthesis.onvoiceschanged = chooseFemaleVoice;
-setRobotState("standby"); setupRecognition(); renderNews(); updateClock(); loadLiveNews();
+setRobotState("standby"); setupRecognition(); renderNews(); updateClock(); loadLiveNews(); loadIntelligence(); loadMarketData();
 window.setInterval(updateClock, 1000);
 window.setInterval(() => loadLiveNews({ announce: true }), 5 * 60 * 1000);
+window.setInterval(() => loadMarketData(), 60 * 1000);

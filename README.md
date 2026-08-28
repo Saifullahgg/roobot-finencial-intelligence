@@ -13,14 +13,18 @@ The assistant conversation runs in the browser at no AI API cost. It understands
 
 ## Vercel deployment
 
-1. Import `Saifullahgg/roobot-finencial-intelligence` into Vercel.
-2. Keep the framework preset as `Other`; no build command is required.
-3. In Vercel Project Settings → Environment Variables, add `GNEWS_API_KEY` for Production, Preview, and Development as needed.
-4. Deploy. Vercel serves the static dashboard and the serverless routes automatically:
-   - `/api/news`
-   - `/api/health`
+1. Push this repository to GitHub. The `.gitignore` already excludes `.env`.
+2. Import the repository into [Vercel](https://vercel.com/new).
+3. Keep the framework preset as **Other**; no build command is required.
+4. In Vercel Project Settings → Environment Variables, add:
+   - `GNEWS_API_KEY` — for live news. Without it, the safe demo feed is used.
+5. Deploy. Vercel serves the static dashboard and the serverless routes automatically:
+   - `/api/news` — live market news
+   - `/api/market` — live crypto and forex data
+   - `/api/intelligence` — events and airdrop radar
+   - `/api/health` — provider status
 
-Never commit `.env` or place the provider key in frontend JavaScript. The included `.gitignore` protects local secrets.
+Never commit `.env` or place provider keys in frontend JavaScript.
 
 ## Checks
 

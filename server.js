@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { URL } = require("node:url");
 const { getNews } = require("./lib/news");
+const { getIntelligence } = require("./lib/intelligence");
+const { fetchMarketData } = require("./lib/market");
 
 loadEnvFile();
 const PORT = Number(process.env.PORT || 3000);
@@ -29,6 +31,8 @@ function sendJson(response, status, body) {
 const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
     if (requestUrl.pathname === "/api/news") return sendJson(response, 200, await getNews(process.env.GNEWS_API_KEY));
+    if (requestUrl.pathname === "/api/intelligence") return sendJson(response, 200, getIntelligence());
+    if (requestUrl.pathname === "/api/market") return sendJson(response, 200, await fetchMarketData());
     if (requestUrl.pathname === "/api/health") return sendJson(response, 200, {
         ok: true,
         liveProvider: Boolean(process.env.GNEWS_API_KEY),
